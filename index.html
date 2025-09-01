@@ -21,7 +21,6 @@
     <!-- Core Libraries for the experience -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
 
     <style>
          :root {
@@ -299,6 +298,8 @@
             }
             .numbered-heading {
                 font-size: 24px;
+                white-space: normal;
+                /* Allow heading to wrap */
             }
             .numbered-heading::after {
                 display: none;
@@ -434,8 +435,7 @@
                         <p class="text-sm sm:text-base text-dim-slate mb-4 font-mono">Jan 2025 - May 2025</p>
                         <ul class="space-y-3 text-slate leading-relaxed">
                             <li class="flex items-start"><span class="accent-color mr-3 mt-1 text-xs">▹</span>Gained hands-on experience with ERP systems using ERPNext during my internship at NDDB. Worked on live projects and learned to present and participate professionally in team
-                                meetings.
-                            </li>
+                                meetings.</li>
                         </ul>
                         <div class="mt-4"><a href="https://drive.google.com/file/d/1dLnTYqOVUEi_EBq7T0vGUhnwrdaa3DvJ/view?usp=drivesdk" class="view-cert-btn mt-4 text-sm text-green font-mono tracking-wider">View Certificate <i class="fas fa-external-link-alt fa-xs ml-1"></i></a></div>
                     </div>
@@ -520,6 +520,7 @@
     </div>
 
     <div class="left-sidebar hidden md:flex flex-col items-center space-y-6">
+        <a href="https://github.com/your-username" target="_blank" class="text-2xl text-dim-slate"><i class="fab fa-github"></i></a>
         <a href="https://www.linkedin.com/in/sahal-thakor-65375a285" target="_blank" class="text-2xl text-dim-slate"><i class="fab fa-linkedin"></i></a>
         <div class="h-32 w-px bg-dim-slate/50"></div>
     </div>
@@ -535,77 +536,18 @@
                 this.activeSection = 0; // 0 is Hero/Home
                 this.sceneManager = new SceneManager(this);
                 this.uiManager = new UIManager(this);
-                this.soundManager = new SoundManager();
             }
 
             init() {
                 this.uiManager.init();
                 this.sceneManager.init();
-                this.soundManager.init();
             }
 
             navigateTo(sectionIndex) {
                 if (this.activeSection === sectionIndex) return;
-
-                this.soundManager.play('transition');
                 this.activeSection = sectionIndex;
                 this.sceneManager.focusOnNode(sectionIndex);
                 this.uiManager.updateActiveSection(sectionIndex);
-            }
-        }
-
-        class SoundManager {
-            constructor() {
-                this.isInitialized = false;
-            }
-
-            async init() {
-                // Initialize Tone.js on first user interaction
-                const initAudio = async() => {
-                    await Tone.start();
-                    this.isInitialized = true;
-                    this.synth = new Tone.PolySynth(Tone.Synth, {
-                        oscillator: {
-                            type: "sine"
-                        },
-                        envelope: {
-                            attack: 0.005,
-                            decay: 0.1,
-                            sustain: 0.3,
-                            release: 1
-                        },
-                        volume: -15
-                    }).toDestination();
-                    this.noise = new Tone.NoiseSynth({
-                        noise: {
-                            type: "white"
-                        },
-                        envelope: {
-                            attack: 0.005,
-                            decay: 0.1,
-                            sustain: 0
-                        },
-                        volume: -20
-                    }).toDestination();
-                    document.body.removeEventListener('click', initAudio);
-                };
-                document.body.addEventListener('click', initAudio);
-            }
-
-            play(sound) {
-                if (!this.isInitialized) return;
-                const now = Tone.now();
-                switch (sound) {
-                    case 'hover':
-                        this.synth.triggerAttackRelease("C5", "8n", now);
-                        break;
-                    case 'click':
-                        this.synth.triggerAttackRelease("G5", "8n", now);
-                        break;
-                    case 'transition':
-                        this.noise.triggerAttackRelease("0.3", now);
-                        break;
-                }
             }
         }
 
@@ -698,7 +640,6 @@
 
                 // Mobile Contact Close Button
                 document.getElementById('close-mobile-contact').addEventListener('click', () => {
-                    this.manager.soundManager.play('click');
                     this.manager.navigateTo(0); // Navigate back to home
                 });
             }
@@ -727,7 +668,6 @@
                 document.querySelectorAll('.view-cert-btn').forEach(link => {
                     link.addEventListener('click', e => {
                         e.preventDefault();
-                        this.manager.soundManager.play('click');
                         openModal(link.href);
                     });
                 });
@@ -1012,7 +952,6 @@
                             z: 1.5
                         });
                         this.hoveredNode.material.color.set(0xffffff);
-                        this.manager.soundManager.play('hover');
                         document.body.style.cursor = 'pointer';
                     }
                 } else {
