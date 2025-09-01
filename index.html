@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sahal Thakor | Computer Engineer</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer"
+    />
+
+    <!-- Tab Icon -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='15' fill='%230a192f'/%3E%3Crect x='5' y='5' width='90' height='90' rx='10' fill='none' stroke='%2364ffda' stroke-width='4'/%3E%3Ctext x='50' y='68' font-family='monospace' font-size='50' fill='%2364ffda' text-anchor='middle'%3EST%3C/text%3E%3Crect x='72' y='35' width='5' height='40' fill='%2364ffda'%3E%3Canimate attributeName='opacity' values='0;1;0' dur='1.5s' repeatCount='indefinite'/%3E%3C/rect%3E%3C/svg%3E">
+
+    <!-- Core Libraries for the experience -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+
+    <style>
+         :root {
+            --dark-navy: #0a192f;
+            --light-navy: #112240;
+            --lightest-navy: #233554;
+            --slate: #e6f1ff;
+            --light-slate: #ffffff;
+            --dim-slate: #a8b2d1;
+            --green: #64ffda;
+            --green-tint: rgba(100, 255, 218, 0.1);
+        }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--dark-navy);
+            color: var(--slate);
+            overflow: hidden;
+            /* No scrollbars */
+            cursor: none;
+            /* Custom cursor will be used */
+        }
+        /* --- Preloader --- */
+        
+        #preloader {
+            position: fixed;
+            inset: 0;
+            background-color: var(--dark-navy);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .loader-text {
+            font-family: 'Fira Code', monospace;
+            color: var(--green);
+            margin-top: 1.5rem;
+        }
+        /* --- Custom Cursor --- */
+        
+        .cursor {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            border: 2px solid var(--green);
+            border-radius: 50%;
+            left: 0;
+            top: 0;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            z-index: 999;
+            transition: width 0.2s, height 0.2s, background-color 0.2s, border-color 0.2s;
+        }
+        
+        .cursor.hover {
+            width: 50px;
+            height: 50px;
+            background-color: var(--green-tint);
+            border-color: var(--green);
+        }
+        
+        .cursor.pointer {
+            width: 20px;
+            height: 20px;
+            background-color: var(--green);
+        }
+        /* --- 3D Canvas & Overlays --- */
+        
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .vignette-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 3;
+            box-shadow: inset 0 0 15vw rgba(0, 0, 0, 0.8);
+        }
+        /* --- UI Elements --- */
+        
+        .glass-nav {
+            background: rgba(10, 25, 47, 0.8);
+            backdrop-filter: blur(10px);
+            @apply shadow-lg border-b border-lightest-navy/20;
+        }
+        
+        .nav-link:hover {
+            color: var(--green);
+            text-shadow: 0 0 5px var(--green);
+        }
+        
+        .btn-primary {
+            @apply font-mono px-6 py-3 border-2 border-green text-green text-base rounded-sm;
+            background-color: transparent;
+            transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--green-tint);
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px var(--green-tint);
+        }
+        /* --- Content Sections --- */
+        
+        .content-section {
+            position: fixed;
+            top: 55%;
+            /* Pushed down further to create more space from header */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            width: 90%;
+            max-width: 1400px;
+            height: 84vh;
+            /* Adjusted height to fit */
+            overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            pointer-events: none;
+            padding: 2rem;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .content-section::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .content-section.visible {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+        }
+        
+        .numbered-heading {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            width: 100%;
+            font-size: clamp(28px, 5vw, 36px);
+            color: var(--light-slate);
+            font-weight: 600;
+        }
+        
+        .numbered-heading::after {
+            content: '';
+            display: block;
+            position: relative;
+            top: -2px;
+            width: 100%;
+            max-width: 300px;
+            height: 1px;
+            margin-left: 1.5rem;
+            background-color: var(--lightest-navy);
+        }
+        /* Project/Certificate Card Redesign */
+        
+        .custom-card {
+            background-color: var(--light-navy);
+            border: 1px solid var(--lightest-navy);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .custom-card:hover {
+            transform: translateY(-8px) perspective(1000px) rotateX(2deg);
+            box-shadow: 0 0 25px var(--green-tint);
+            border-color: var(--green);
+        }
+        /* Experience Section Tabs */
+        
+        .experience-tab {
+            border-left: 2px solid var(--lightest-navy);
+            transition: all 0.3s ease;
+        }
+        
+        .experience-tab:hover {
+            background-color: var(--green-tint);
+            color: var(--green);
+        }
+        
+        .experience-tab.active {
+            border-left-color: var(--green);
+            color: var(--green);
+        }
+        
+        .experience-content {
+            display: none;
+        }
+        
+        .experience-content.active {
+            display: block;
+        }
+        /* Left Social Sidebar */
+        
+        .left-sidebar {
+            position: fixed;
+            bottom: 0;
+            left: 40px;
+            z-index: 10;
+        }
+        
+        .left-sidebar a {
+            transition: transform 0.3s ease, color 0.3s ease, text-shadow 0.3s ease;
+        }
+        
+        .left-sidebar a:hover {
+            transform: translateY(-5px);
+            color: var(--green);
+            text-shadow: 0 0 8px var(--green);
+        }
+        /* Certificate Modal Styling */
+        
+        #certificate-modal {
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        #certificate-modal .modal-content-area {
+            border: 2px solid var(--green);
+            box-shadow: 0 0 30px var(--green-tint);
+            background-color: var(--dark-navy);
+        }
+        /* Terminal Window for Contact */
+        
+        #terminal-window {
+            position: fixed;
+            z-index: 50;
+            background: rgba(10, 25, 47, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--lightest-navy);
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: none;
+            /* Initially hidden */
+        }
+        
+        #terminal-header {
+            background: var(--lightest-navy);
+            padding: 8px 12px;
+            cursor: move;
+            border-top-left-radius: 7px;
+            border-top-right-radius: 7px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .terminal-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        #header-logo {
+            color: var(--slate);
+            transition: all 0.3s ease-in-out;
+        }
+        
+        #home-btn:hover #header-logo {
+            color: var(--green);
+            transform: scale(1.15) rotate(15deg);
+        }
+        
+        @media (max-width: 767px) {
+            .left-sidebar {
+                display: none;
+            }
+            .content-section {
+                padding: 1.5rem 1rem;
+                width: 95%;
+                height: auto;
+                max-height: 80vh;
+                /* Adjust max height for mobile */
+            }
+            .numbered-heading {
+                font-size: 24px;
+            }
+            .numbered-heading::after {
+                display: none;
+            }
+            .experience-tab {
+                border-left: none;
+                border-bottom: 2px solid var(--lightest-navy);
+                padding: 0.75rem 0.5rem;
+                margin: 0 0.25rem;
+                text-align: center;
+            }
+            .experience-tab.active {
+                border-bottom-color: var(--green);
+            }
+            .cursor {
+                display: none;
+            }
+            body {
+                cursor: auto;
+            }
+            #terminal-window {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="antialiased">
+    <!-- Preloader -->
+    <div id="preloader">
+        <svg width="80" height="80" viewBox="0 0 100 100">
+            <g fill="none" stroke="var(--green)" stroke-width="4">
+                <path d="M 50,50 L 50,0 A 50,50 0 0,1 100,50 Z">
+                    <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="1s" repeatCount="indefinite" />
+                </path>
+                <path d="M 50,50 L 0,50 A 50,50 0 0,1 50,100 Z">
+                    <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="-360 50 50" dur="1.5s" repeatCount="indefinite" />
+                </path>
+            </g>
+        </svg>
+        <div id="loader-text" class="loader-text"></div>
+    </div>
+
+    <div class="cursor"></div>
+    <div class="vignette-overlay"></div>
+    <canvas id="bg-canvas"></canvas>
+
+    <header id="header" class="fixed top-0 left-0 right-0 z-20 transition-all duration-300 glass-nav">
+        <nav class="container mx-auto px-6 py-5 flex justify-between items-center">
+            <a href="#" id="home-btn">
+                <svg id="header-logo" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+            </a>
+            <div class="hidden md:flex items-center space-x-6 font-mono text-base">
+                <a href="#" class="nav-link scene-nav-link" data-target="0"><i class="fas fa-home fa-fw mr-1"></i>Home</a>
+                <a href="#about" class="nav-link scene-nav-link" data-target="1"><i class="fas fa-user fa-fw mr-1"></i>About</a>
+                <a href="#experience" class="nav-link scene-nav-link" data-target="2"><i class="fas fa-briefcase fa-fw mr-1"></i>Experience</a>
+                <a href="#projects" class="nav-link scene-nav-link" data-target="3"><i class="fas fa-folder-open fa-fw mr-1"></i>Projects</a>
+                <a href="#certificates" class="nav-link scene-nav-link" data-target="4"><i class="fas fa-certificate fa-fw mr-1"></i>Certificates</a>
+                <a href="#contact" class="nav-link scene-nav-link" data-target="5"><i class="fas fa-envelope fa-fw mr-1"></i>Contact</a>
+                <a href="https://drive.google.com/file/d/1d_kOK26EDFrs1kh8-aM6ZOzDvHEFWCF9/view?usp=drivesdk" target="_blank" class="btn-primary !py-2 !px-4 !text-base">resume.sh</a>
+            </div>
+            <button id="mobile-menu-btn" class="md:hidden text-2xl z-[80] text-green"><i class="fas fa-bars"></i></button>
+        </nav>
+    </header>
+
+    <div id="mobile-menu" class="hidden fixed inset-0 bg-dark-navy/95 backdrop-blur-sm z-[70] flex flex-col items-center justify-center space-y-8 text-2xl font-mono">
+        <button id="mobile-menu-close-btn" class="absolute top-6 right-6 text-4xl text-slate hover:text-green">&times;</button>
+        <a href="#" class="mobile-link scene-nav-link" data-target="0"><i class="fas fa-home fa-fw mr-3"></i>Home</a>
+        <a href="#about" class="mobile-link scene-nav-link" data-target="1"><i class="fas fa-user fa-fw mr-3"></i>About</a>
+        <a href="#experience" class="mobile-link scene-nav-link" data-target="2"><i class="fas fa-briefcase fa-fw mr-3"></i>Experience</a>
+        <a href="#projects" class="mobile-link scene-nav-link" data-target="3"><i class="fas fa-folder-open fa-fw mr-3"></i>Projects</a>
+        <a href="#certificates" class="mobile-link scene-nav-link" data-target="4"><i class="fas fa-certificate fa-fw mr-3"></i>Certificates</a>
+        <a href="#contact" class="mobile-link scene-nav-link" data-target="5"><i class="fas fa-envelope fa-fw mr-3"></i>Contact</a>
+        <a href="https://drive.google.com/file/d/1cKyLNWB7ro7hOj0m79xCpFPvlrrPdCLu/view?usp=drivesdk" target="_blank" class="btn-primary mt-6">resume.sh</a>
+    </div>
+
+    <main>
+        <section id="hero" class="content-section visible">
+            <div class="h-full flex flex-col justify-center">
+                <div class="max-w-4xl">
+                    <p class="text-lg sm:text-xl accent-color mb-4 font-mono">sahal.whoami()</p>
+                    <h1 class="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold text-light-slate tracking-tight">Sahal S Thakor</h1>
+                    <h3 class="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-slate mt-2 tracking-tight">Computer Engineer</h3>
+                    <p class="max-w-2xl mt-8 text-lg text-slate leading-relaxed">
+                        I am a computer engineer architecting elegant, high-performance digital experiences from complex problems. My focus is on writing clean, scalable code to build products that are both powerful and intuitive.
+                    </p>
+                    <div class="mt-12">
+                        <a href="#projects" class="btn-primary text-base sm:text-lg scene-nav-link" data-target="3">./view-projects</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="content-section">
+            <h2 class="numbered-heading font-mono">01. About Me</h2>
+            <div class="grid md:grid-cols-5 gap-10">
+                <div class="md:col-span-3 text-slate space-y-5 leading-relaxed text-lg">
+                    <p>Hello! My journey into technology began with a curiosity for how things work,I am Computer Engineer graduate with a strong academic foundation and practical experience in ERP development, AI/ML, and web-based projects. Demonstrated
+                        ability to translate theoretical knowledge into real-world applications through internships and live server deployments. Passionate about developing scalable software solutions and eager to contribute to dynamic and innovative
+                        tech environments.</p>
+                    <p>I've had the privilege of contributing to a diverse range of projects, giving me a holistic understanding of the entire development lifecycle. I thrive in environments that challenge me to learn and adapt, and I'm always looking for
+                        the next problem to solve.</p>
+                    <p class="font-mono text-light-slate mt-6 text-base sm:text-lg">Core technologies I work with:</p>
+                    <ul class="grid grid-cols-2 gap-2 font-mono text-sm sm:text-base mt-2">
+                        <li class="flex items-center"><span class="accent-color mr-3">▹</span>Python</li>
+                        <li class="flex items-center"><span class="accent-color mr-3">▹</span>Html , Css , JavaScript</li>
+                        <li class="flex items-center"><span class="accent-color mr-3">▹</span>Databases (MySQL)</li>
+                        <li class="flex items-center"><span class="accent-color mr-3">▹</span>Docker</li>
+                    </ul>
+                </div>
+                <div class="md:col-span-2 flex justify-center items-center">
+                    <div class="w-56 h-72 sm:w-64 sm:h-80 bg-light-navy border-2 border-green relative group">
+                        <img src="https://placehold.co/400x400/0a192f/64ffda?text=ST" alt="Sahal Thakor" class="absolute inset-0 object-cover w-full h-full transition-all duration-300 group-hover:translate-x-2 group-hover:-translate-y-2">
+                        <div class="absolute inset-0 border-2 border-green translate-x-4 translate-y-4 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-300 pointer-events-none"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="experience" class="content-section">
+            <h2 class="numbered-heading font-mono">02. Experience</h2>
+            <div class="max-w-6xl mx-auto md:flex">
+                <div class="flex flex-row flex-wrap justify-center md:flex-col md:flex-nowrap md:justify-start md:mr-8 font-mono text-sm">
+                    <button class="experience-tab active text-left px-4 py-3 whitespace-nowrap" data-target="panel-0">NDDB</button>
+                    <button class="experience-tab text-left px-4 py-3 whitespace-nowrap" data-target="panel-1">TECHELECON</button>
+                    <button class="experience-tab text-left px-4 py-3 whitespace-nowrap" data-target="panel-2">CODE UNNATI</button>
+                    <button class="experience-tab text-left px-4 py-3 whitespace-nowrap" data-target="panel-3">Android Dev</button>
+                </div>
+                <div class="flex-grow relative mt-5 md:mt-0">
+                    <div id="panel-0" class="experience-content active">
+                        <h3 class="text-xl sm:text-2xl font-semibold text-light-slate">Intern <span class="accent-color">@ ERP DEVELOPMENT</span></h3>
+                        <p class="text-sm sm:text-base text-dim-slate mb-4 font-mono">Jan 2025 - May 2025</p>
+                        <ul class="space-y-3 text-slate leading-relaxed">
+                            <li class="flex items-start"><span class="accent-color mr-3 mt-1 text-xs">▹</span>Gained hands-on experience with ERP systems using ERPNext during my internship at NDDB. Worked on live projects and learned to present and participate professionally in team
+                                meetings.
+                            </li>
+                        </ul>
+                        <div class="mt-4"><a href="https://drive.google.com/file/d/1dLnTYqOVUEi_EBq7T0vGUhnwrdaa3DvJ/view?usp=drivesdk" class="view-cert-btn mt-4 text-sm text-green font-mono tracking-wider">View Certificate <i class="fas fa-external-link-alt fa-xs ml-1"></i></a></div>
+                    </div>
+                    <div id="panel-1" class="experience-content">
+                        <h3 class="text-xl sm:text-2xl font-semibold text-light-slate">Intern <span class="accent-color">@ DATA ANALYST</span></h3>
+                        <p class="text-sm sm:text-base text-dim-slate mb-4 font-mono">May 2024 - June 2024</p>
+                        <ul class="space-y-3 text-slate leading-relaxed">
+                            <li class="flex items-start"><span class="accent-color mr-3 mt-1 text-xs">▹</span>Worked on data analysis tasks involving data cleaning, visualization, and reporting. Gained practical experience with tools like Excel and Python for analyzing business data.</li>
+                        </ul>
+                        <div class="mt-4"><a href="https://drive.google.com/file/d/1As51sPltx7c5YXYHeZLldcBOyCHtTxVk/view?usp=drivesdk" class="view-cert-btn mt-4 text-sm text-green font-mono tracking-wider">View Certificate <i class="fas fa-external-link-alt fa-xs ml-1"></i></a></div>
+                    </div>
+                    <div id="panel-2" class="experience-content">
+                        <h3 class="text-xl sm:text-2xl font-semibold text-light-slate">Student <span class="accent-color">@ Workshop</span></h3>
+                        <p class="text-sm sm:text-base text-dim-slate mb-4 font-mono">(17 DAYS)</p>
+                        <ul class="space-y-3 text-slate leading-relaxed">
+                            <li class="flex items-start"><span class="accent-color mr-3 mt-1 text-xs">▹</span>Completed intensive training covering fundamentals of IoT, data analysis techniques, and enterprise processes using SAP.</li>
+                        </ul>
+                        <div class="mt-4"><a href="https://drive.google.com/file/d/1j7OjbpmZO-b_hSjWA6w-Z1NsLceG49hx/view?usp=drivesdk" class="view-cert-btn mt-4 text-sm text-green font-mono tracking-wider">View Certificate <i class="fas fa-external-link-alt fa-xs ml-1"></i></a></div>
+                    </div>
+                    <div id="panel-3" class="experience-content">
+                        <h3 class="text-xl sm:text-2xl font-semibold text-light-slate">Student <span class="accent-color">@ Workshop</span></h3>
+                        <p class="text-sm sm:text-base text-dim-slate mb-4 font-mono">1 Day</p>
+                        <ul class="space-y-3 text-slate leading-relaxed">
+                            <li class="flex items-start"><span class="accent-color mr-3 mt-1 text-xs">▹</span>Attended a hands-on workshop on Android & Flutter Development at MBIT, covering app design and basic deployment.</li>
+                        </ul>
+                        <div class="mt-4"><a href="https://drive.google.com/file/d/1BBV7FvYFzuFGMbHJ40QGxl7iRyRvS-mE/view?usp=drivesdk" class="view-cert-btn mt-4 text-sm text-green font-mono tracking-wider">View Certificate <i class="fas fa-external-link-alt fa-xs ml-1"></i></a></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="projects" class="content-section">
+            <h2 class="numbered-heading font-mono">03. Things I've Built</h2>
+            <div id="project-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Project cards will be injected by JavaScript -->
+            </div>
+        </section>
+
+        <section id="certificates" class="content-section">
+            <h2 class="numbered-heading font-mono">04. Certificates</h2>
+            <div id="certificate-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Certificate cards will be injected by JavaScript -->
+            </div>
+        </section>
+
+        <section id="contact" class="content-section">
+            <!-- This section is a placeholder for navigation logic -->
+        </section>
+    </main>
+
+    <!-- Certificate Modal -->
+    <div id="certificate-modal" class="hidden fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4">
+        <div class="modal-content-area bg-light-navy rounded-lg relative max-w-5xl w-full h-[90vh]">
+            <button id="modal-close-btn" class="absolute -top-4 -right-4 text-4xl text-slate hover:text-green z-10 bg-dark-navy rounded-full w-10 h-10 flex items-center justify-center leading-none">&times;</button>
+            <iframe id="modal-iframe" src="" class="w-full h-full rounded-md" frameborder="0"></iframe>
+        </div>
+    </div>
+
+    <!-- Desktop Contact Terminal Window -->
+    <div id="terminal-window" class="hidden md:block" style="width: 600px; height: 400px; top: 150px; left: 200px;">
+        <div id="terminal-header">
+            <div class="terminal-btn" style="background: #ff5f57;"></div>
+            <div class="terminal-btn" style="background: #febc2e;"></div>
+            <div class="terminal-btn" style="background: #28c840;"></div>
+            <span class="ml-auto font-mono text-sm text-dim-slate">sahal@thakor.dev -- bash</span>
+        </div>
+        <div class="p-8 text-center flex flex-col justify-center h-full">
+            <h2 class="font-mono text-lg sm:text-xl accent-color mb-4">05. What’s Next?</h2>
+            <h3 class="text-4xl sm:text-5xl font-bold text-light-slate mb-4 tracking-tight">Get In Touch</h3>
+            <p class="max-w-xl mx-auto text-slate text-lg mb-8 leading-relaxed">My inbox is always open. Whether you have a question, a project proposal, or just want to connect, feel free to reach out. I'll get back to you!</p>
+            <a href="mailto:sahalthakor440@gmail.com" class="btn-primary text-base sm:text-lg self-center"><span>send-message.exe</span></a>
+        </div>
+    </div>
+
+    <!-- Mobile Contact Overlay -->
+    <div id="mobile-contact-overlay" class="hidden md:hidden fixed inset-0 bg-dark-navy z-[65] flex flex-col items-center justify-center text-center p-8">
+        <button id="close-mobile-contact" class="absolute top-6 right-6 text-4xl text-slate hover:text-green">&times;</button>
+        <h2 class="font-mono text-lg sm:text-xl accent-color mb-4">05. What’s Next?</h2>
+        <h3 class="text-5xl font-bold text-light-slate mb-4 tracking-tight">Get In Touch</h3>
+        <p class="max-w-xl mx-auto text-slate text-lg mb-8 leading-relaxed">My inbox is always open. Whether you have a question, a project proposal, or just want to connect, feel free to reach out. I'll get back to you!</p>
+        <a href="mailto:sahalthakor440@gmail.com" class="btn-primary text-base sm:text-lg"><span>send-message.exe</span></a>
+    </div>
+
+    <div class="left-sidebar hidden md:flex flex-col items-center space-y-6">
+        <a href="https://www.linkedin.com/in/sahal-thakor-65375a285" target="_blank" class="text-2xl text-dim-slate"><i class="fab fa-linkedin"></i></a>
+        <div class="h-32 w-px bg-dim-slate/50"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const manager = new SiteManager();
+            manager.init();
+        });
+
+        class SiteManager {
+            constructor() {
+                this.activeSection = 0; // 0 is Hero/Home
+                this.sceneManager = new SceneManager(this);
+                this.uiManager = new UIManager(this);
+            }
+
+            init() {
+                this.uiManager.init();
+                this.sceneManager.init();
+            }
+
+            navigateTo(sectionIndex) {
+                if (this.activeSection === sectionIndex) return;
+                this.activeSection = sectionIndex;
+                this.sceneManager.focusOnNode(sectionIndex);
+                this.uiManager.updateActiveSection(sectionIndex);
+            }
+        }
+
+        class UIManager {
+            constructor(manager) {
+                this.manager = manager;
+                this.cursor = document.querySelector('.cursor');
+                this.loaderText = document.getElementById('loader-text');
+                this.sections = document.querySelectorAll('.content-section');
+            }
+
+            init() {
+                this.initPreloader();
+                this.initCursor();
+                this.populateGrids();
+                this.initEventListeners();
+            }
+
+            initPreloader() {
+                const preloader = document.getElementById('preloader');
+                const loadingMessages = ["Booting Kernel...", "Initializing 3D renderer...", "Compiling shaders...", "Building DOM...", "Establishing connection...", "Ready."];
+                let i = 0;
+                const interval = setInterval(() => {
+                    this.loaderText.textContent = loadingMessages[i];
+                    i++;
+                    if (i === loadingMessages.length) {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            preloader.style.opacity = '0';
+                            preloader.addEventListener('transitionend', () => preloader.remove());
+                        }, 500);
+                    }
+                }, 400);
+            }
+
+            initCursor() {
+                if (window.matchMedia("(pointer: coarse)").matches) return;
+
+                window.addEventListener('mousemove', e => {
+                    this.cursor.style.left = e.clientX + 'px';
+                    this.cursor.style.top = e.clientY + 'px';
+                });
+
+                document.querySelectorAll('a, button, .experience-tab').forEach(el => {
+                    el.addEventListener('mouseenter', () => this.cursor.classList.add('hover'));
+                    el.addEventListener('mouseleave', () => this.cursor.classList.remove('hover'));
+                });
+            }
+
+            initEventListeners() {
+                document.querySelectorAll('.scene-nav-link').forEach(link => {
+                    link.addEventListener('click', e => {
+                        e.preventDefault();
+                        const targetIndex = parseInt(link.dataset.target);
+                        this.manager.navigateTo(targetIndex);
+                    });
+                });
+                document.getElementById('home-btn').addEventListener('click', e => {
+                    e.preventDefault();
+                    this.manager.navigateTo(0);
+                });
+
+                const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+                const mobileMenu = document.getElementById('mobile-menu');
+                const mobileMenuCloseBtn = document.getElementById('mobile-menu-close-btn');
+                const toggleMenu = () => {
+                    mobileMenu.classList.toggle('hidden');
+                    mobileMenuBtn.querySelector('i').classList.toggle('fa-bars');
+                    mobileMenuBtn.querySelector('i').classList.toggle('fa-times');
+                };
+                mobileMenuBtn.addEventListener('click', toggleMenu);
+                mobileMenuCloseBtn.addEventListener('click', toggleMenu);
+                mobileMenu.querySelectorAll('.mobile-link').forEach(link => link.addEventListener('click', toggleMenu));
+
+                document.querySelectorAll('.experience-tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        tab.parentElement.querySelectorAll('.experience-tab').forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        const contentContainer = tab.closest('.md\\:flex').querySelector('.flex-grow');
+                        contentContainer.querySelectorAll('.experience-content').forEach(c => c.classList.remove('active'));
+                        contentContainer.querySelector(`#${tab.dataset.target}`).classList.add('active');
+                    });
+                });
+
+                this.initModal();
+                this.initTerminal();
+
+                document.getElementById('close-mobile-contact').addEventListener('click', () => {
+                    this.manager.navigateTo(0);
+                });
+            }
+
+            initModal() {
+                const modal = document.getElementById('certificate-modal');
+                const modalIframe = document.getElementById('modal-iframe');
+                const modalCloseBtn = document.getElementById('modal-close-btn');
+
+                const openModal = (url) => {
+                    try {
+                        const fileId = url.split('/d/')[1].split('/')[0];
+                        modalIframe.src = `https://drive.google.com/file/d/${fileId}/preview`;
+                        modal.classList.remove('hidden');
+                        document.body.classList.add('modal-open');
+                    } catch (e) {
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                    }
+                };
+                const closeModal = () => {
+                    modal.classList.add('hidden');
+                    document.body.classList.remove('modal-open');
+                    modalIframe.src = '';
+                };
+
+                document.querySelectorAll('.view-cert-btn').forEach(link => {
+                    link.addEventListener('click', e => {
+                        e.preventDefault();
+                        openModal(link.href);
+                    });
+                });
+                modalCloseBtn.addEventListener('click', closeModal);
+                modal.addEventListener('click', e => e.target === modal && closeModal());
+            }
+
+            initTerminal() {
+                const terminal = document.getElementById('terminal-window');
+                const header = document.getElementById('terminal-header');
+
+                if (!window.matchMedia("(pointer: coarse)").matches) {
+                    let isDragging = false,
+                        offsetX, offsetY;
+                    header.addEventListener('mousedown', e => {
+                        isDragging = true;
+                        offsetX = e.clientX - terminal.offsetLeft;
+                        offsetY = e.clientY - terminal.offsetTop;
+                        this.cursor.classList.add('pointer');
+                    });
+                    document.addEventListener('mouseup', () => {
+                        isDragging = false;
+                        this.cursor.classList.remove('pointer');
+                    });
+                    document.addEventListener('mousemove', e => {
+                        if (isDragging) {
+                            terminal.style.left = `${e.clientX - offsetX}px`;
+                            terminal.style.top = `${e.clientY - offsetY}px`;
+                        }
+                    });
+                }
+            }
+
+            populateGrids() {
+                const projectGrid = document.getElementById('project-grid');
+                const projects = [{
+                    title: 'ERP SYSTEM – NDDB',
+                    desc: 'Developed modules and integrated external APIs on a live ERPNext server for real-time validation and data handling.',
+                    tech: ['Python', 'ERPNext', 'JavaScript', 'MySQL']
+                }, {
+                    title: 'Intrusion Detection System',
+                    desc: 'Hardware-based system for real-time monitoring and detection of unauthorized access using sensors and microcontrollers.',
+                    tech: ['C++', 'Arduino', 'Sensors']
+                }, {
+                    title: 'Car Number Plate Detection',
+                    desc: 'AI/ML-based system for automatic vehicle identification through real-time number plate recognition.',
+                    tech: ['Python', 'OpenCV', 'AI/ML']
+                }, {
+                    title: 'Web Development Project',
+                    desc: 'Developed a fully responsive website for a client using HTML and CSS, focusing on a clean design and cross-device compatibility.',
+                    tech: ['HTML', 'CSS', 'JavaScript']
+                }, ];
+                projects.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'custom-card p-6 flex flex-col justify-between rounded-sm';
+                    card.innerHTML = `<div><div class="flex justify-between items-center mb-4"><i class="far fa-folder text-4xl accent-color"></i></div><h3 class="text-xl font-bold text-light-slate mb-2">${p.title}</h3><p class="text-slate text-base leading-relaxed">${p.desc}</p></div><div class="mt-4 text-xs text-dim-slate font-mono tracking-wider">${p.tech.join(' · ')}</div>`;
+                    projectGrid.appendChild(card);
+                });
+
+                const certificateGrid = document.getElementById('certificate-grid');
+                const certificates = [{
+                    title: 'Machine Learning',
+                    issuer: 'Certification Body',
+                    icon: 'fas fa-robot',
+                    link: 'https://drive.google.com/file/d/1WtScsVT_v3ZxJSgXZxGstgE2k7NPZfIZ/view?usp=drivesdk'
+                }, {
+                    title: 'SQL for Data Science',
+                    issuer: 'Certification Body',
+                    icon: 'fas fa-database',
+                    link: 'https://drive.google.com/file/d/1KZDsqGSdI00-ClDmGPJBr9Ih4RDNeyPp/view?usp=drivesdk'
+                }, {
+                    title: 'Web Development',
+                    issuer: 'Certification Body',
+                    icon: 'fas fa-code',
+                    link: 'https://drive.google.com/file/d/1fopbBp3iv-TvQubIKFRZM1ZISrVPYYzu/view?usp=drivesdk'
+                }, {
+                    title: 'TCS iON NQT Assessment',
+                    issuer: 'TCS iON',
+                    icon: 'fas fa-file-alt',
+                    link: 'https://drive.google.com/file/d/1bFqrtOIjBjMl2gZb_3u54lPjURnM2ueH/view?usp=drivesdk'
+                }, ];
+                certificates.forEach(c => {
+                    const card = document.createElement('div');
+                    card.className = 'custom-card p-6 flex flex-col justify-between rounded-sm text-center items-center';
+                    card.innerHTML = `<div><i class="${c.icon} text-5xl accent-color mb-4"></i><h3 class="text-xl font-bold text-light-slate mb-2">${c.title}</h3><p class="text-dim-slate text-sm leading-relaxed">${c.issuer}</p></div><a href="${c.link}" class="view-cert-btn mt-4 text-sm text-green font-mono tracking-wider">View Certificate</a>`;
+                    certificateGrid.appendChild(card);
+                });
+            }
+
+            updateActiveSection(index) {
+                this.sections.forEach((section, i) => {
+                    section.classList.toggle('visible', i === index && i !== 5);
+                });
+
+                const terminal = document.getElementById('terminal-window');
+                const mobileContact = document.getElementById('mobile-contact-overlay');
+
+                if (index === 5) {
+                    terminal.style.display = 'block';
+                    mobileContact.classList.remove('hidden');
+                } else {
+                    terminal.style.display = 'none';
+                    mobileContact.classList.add('hidden');
+                }
+            }
+        }
+
+        class SceneManager {
+            constructor(manager) {
+                this.manager = manager;
+                this.canvas = document.getElementById('bg-canvas');
+                this.mouse = new THREE.Vector2();
+                this.navNodes = [];
+                this.raycaster = new THREE.Raycaster();
+                this.hoveredNode = null;
+            }
+
+            init() {
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.camera.position.z = 15;
+                this.renderer = new THREE.WebGLRenderer({
+                    canvas: this.canvas,
+                    antialias: true,
+                    alpha: true
+                });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+                this.createLights();
+                this.createCore();
+                this.createNavNodes();
+                this.createParticles();
+                this.initEventListeners();
+                this.animate();
+            }
+
+            createLights() {
+                const ambient = new THREE.AmbientLight(0xffffff, 0.2);
+                this.scene.add(ambient);
+                const pointLight = new THREE.PointLight(0x64ffda, 1, 100);
+                pointLight.position.set(0, 0, 5);
+                this.scene.add(pointLight);
+            }
+
+            createCore() {
+                this.coreGroup = new THREE.Group();
+                const icosahedronGeom = new THREE.IcosahedronGeometry(2.5, 1);
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0x64ffda,
+                    emissive: 0x112240,
+                    roughness: 0.4,
+                    metalness: 0.8,
+                    wireframe: true
+                });
+                this.coreMesh = new THREE.Mesh(icosahedronGeom, material);
+                this.coreGroup.add(this.coreMesh);
+                this.scene.add(this.coreGroup);
+            }
+
+            createNavNodes() {
+                const nodeGeom = new THREE.SphereGeometry(0.3, 16, 16);
+                const nodeMat = new THREE.MeshBasicMaterial({
+                    color: 0x64ffda
+                });
+                const numNodes = 5;
+                for (let i = 0; i < numNodes; i++) {
+                    const angle = (i / numNodes) * Math.PI * 2;
+                    const node = new THREE.Mesh(nodeGeom, nodeMat.clone());
+                    node.position.x = Math.cos(angle) * 7;
+                    node.position.y = Math.sin(angle) * 7;
+                    node.userData.index = i + 1; // 1-based index
+                    this.scene.add(node);
+                    this.navNodes.push(node);
+                }
+            }
+
+            createParticles() {
+                const particlesGeometry = new THREE.BufferGeometry();
+                const count = 5000;
+                const positions = new Float32Array(count * 3);
+                for (let i = 0; i < count * 3; i++) {
+                    positions[i] = (Math.random() - 0.5) * 100;
+                }
+                particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                const particlesMaterial = new THREE.PointsMaterial({
+                    size: 0.05,
+                    sizeAttenuation: true,
+                    color: 0x233554
+                });
+                this.particles = new THREE.Points(particlesGeometry, particlesMaterial);
+                this.scene.add(this.particles);
+            }
+
+            focusOnNode(index) {
+                const targetPos = new THREE.Vector3();
+                if (index > 0 && index <= this.navNodes.length) {
+                    const node = this.navNodes[index - 1];
+                    targetPos.set(node.position.x, node.position.y, node.position.z + 5);
+                } else { // Home position
+                    targetPos.set(0, 0, 15);
+                }
+
+                gsap.to(this.camera.position, {
+                    duration: 1.5,
+                    x: targetPos.x,
+                    y: targetPos.y,
+                    z: targetPos.z,
+                    ease: 'power3.inOut'
+                });
+
+                gsap.to(this.camera.rotation, {
+                    duration: 1.5,
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    ease: 'power3.inOut'
+                });
+            }
+
+            initEventListeners() {
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+                window.addEventListener('mousemove', e => {
+                    this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                    this.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                });
+                window.addEventListener('click', () => {
+                    if (this.hoveredNode) {
+                        this.manager.navigateTo(this.hoveredNode.userData.index);
+                    }
+                });
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+
+                const time = Date.now() * 0.0005;
+                this.coreMesh.rotation.y = time * 0.5;
+                this.coreMesh.rotation.x = time * 0.3;
+                this.particles.rotation.y = time * 0.01;
+
+                this.navNodes.forEach((node, i) => {
+                    const angle = time * 0.5 + (i / this.navNodes.length) * Math.PI * 2;
+                    node.position.x = Math.cos(angle) * 7;
+                    node.position.y = Math.sin(angle) * 7;
+                });
+
+                if (this.manager.activeSection === 0) {
+                    this.camera.position.x += (this.mouse.x * 2 - this.camera.position.x) * 0.02;
+                    this.camera.position.y += (this.mouse.y * 2 - this.camera.position.y) * 0.02;
+                    this.camera.lookAt(this.scene.position);
+                }
+
+                this.raycaster.setFromCamera(this.mouse, this.camera);
+                const intersects = this.raycaster.intersectObjects(this.navNodes);
+
+                if (intersects.length > 0) {
+                    if (this.hoveredNode !== intersects[0].object) {
+                        if (this.hoveredNode) {
+                            gsap.to(this.hoveredNode.scale, {
+                                duration: 0.3,
+                                x: 1,
+                                y: 1,
+                                z: 1
+                            });
+                            this.hoveredNode.material.color.set(0x64ffda);
+                        }
+                        this.hoveredNode = intersects[0].object;
+                        gsap.to(this.hoveredNode.scale, {
+                            duration: 0.3,
+                            x: 1.5,
+                            y: 1.5,
+                            z: 1.5
+                        });
+                        this.hoveredNode.material.color.set(0xffffff);
+                        document.body.style.cursor = 'pointer';
+                    }
+                } else {
+                    if (this.hoveredNode) {
+                        gsap.to(this.hoveredNode.scale, {
+                            duration: 0.3,
+                            x: 1,
+                            y: 1,
+                            z: 1
+                        });
+                        this.hoveredNode.material.color.set(0x64ffda);
+                        this.hoveredNode = null;
+                        document.body.style.cursor = 'none';
+                    }
+                }
+
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+    </script>
+</body>
+
+</html>
