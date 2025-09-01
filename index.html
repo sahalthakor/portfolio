@@ -136,13 +136,15 @@
         
         .content-section {
             position: fixed;
-            top: 50%;
+            top: 53%;
+            /* Pushed down to create space from header */
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 10;
             width: 90%;
             max-width: 1400px;
-            height: 90vh;
+            height: 86vh;
+            /* Adjusted height to fit */
             overflow-y: auto;
             opacity: 0;
             visibility: hidden;
@@ -289,7 +291,8 @@
                 padding: 1.5rem 1rem;
                 width: 95%;
                 height: auto;
-                max-height: 85vh;
+                max-height: 80vh;
+                /* Adjust max height for mobile */
             }
             .numbered-heading {
                 font-size: 24px;
